@@ -1,0 +1,16 @@
+[package]
+name = "dfa-simulator"
+version = "0.1.0"
+edition = "2024"
+authors = ["Lefterache Ștefan <lefterache.stefan.8@gmail.com>"]
+
+[dependencies]
+petgraph = "0.8.3"
+thiserror = "2.0.18"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false
+debug = false
