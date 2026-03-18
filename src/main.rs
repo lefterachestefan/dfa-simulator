@@ -4,10 +4,8 @@
 #![forbid(missing_docs)]
 #![forbid(clippy::all)]
 #![forbid(clippy::nursery)]
-#![forbid(clippy::pedantic)]
+#![deny(clippy::pedantic)]
 #![forbid(clippy::missing_panics_doc)]
-#![forbid(clippy::missing_docs_in_private_items)]
-#![forbid(clippy::missing_crate_level_docs)]
 #![forbid(clippy::unwrap_used)]
 
 use petgraph::Direction;
@@ -16,14 +14,13 @@ use petgraph::visit::EdgeRef;
 use std::num::ParseIntError;
 use thiserror::Error;
 
-struct DFA {
+struct Dfa {
     initial_state: u32,
     final_states: Vec<u32>,
     graph: DiGraph<u32, String>,
     alphabet: Vec<String>,
 }
 
-#[inline(always)]
 fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
     let mut splitted = text.as_ref().split(',');
     let from = splitted.next()?;
@@ -51,7 +48,7 @@ enum ReadGraphError {
     MissingFinalStates,
 }
 
-fn read_graph(path: impl AsRef<str>) -> Result<DFA, ReadGraphError> {
+fn read_graph(path: impl AsRef<str>) -> Result<Dfa, ReadGraphError> {
     let input = std::fs::read_to_string(path.as_ref())?;
     let mut lines = input.lines();
 
@@ -60,7 +57,10 @@ fn read_graph(path: impl AsRef<str>) -> Result<DFA, ReadGraphError> {
     let final_states = lines.next().ok_or(ReadGraphError::MissingFinalStates)?;
     let text_edges = lines;
 
-    let alphabet: Vec<String> = alphabet.split(',').map(|x| x.to_string()).collect();
+    let alphabet: Vec<String> = alphabet
+        .split(',')
+        .map(std::string::ToString::to_string)
+        .collect();
     let initial_state = initial_state
         .trim()
         .parse::<u32>()
@@ -74,10 +74,10 @@ fn read_graph(path: impl AsRef<str>) -> Result<DFA, ReadGraphError> {
         .map(convert_edge_text_line)
         .collect::<Option<Vec<(u32, u32, String)>>>()
         .ok_or(ReadGraphError::BadInput)?;
-    Ok(DFA::new(initial_state, edges, final_states, alphabet))
+    Ok(Dfa::new(initial_state, edges, final_states, alphabet))
 }
 
-impl DFA {
+impl Dfa {
     /// Create a new Deterministic Finite Automaton.
     /// `initial_state` - starting position, usually 0 or 1
     /// `edges` - list of possible transitions of the form: (from, to, symbol)
@@ -96,8 +96,8 @@ impl DFA {
 
         Self {
             initial_state,
-            graph,
             final_states,
+            graph,
             alphabet,
         }
     }
@@ -145,7 +145,8 @@ impl DFA {
         }
 
         println!("------------");
-        self.final_states.contains(&(current_state.index() as u32))
+        let index = u32::try_from(current_state.index()).expect("overflow");
+        self.final_states.contains(&index)
     }
 }
 
