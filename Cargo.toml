@@ -1,8 +1,13 @@
 [package]
-name = "dfa-simulator"
-version = "0.1.1"
+name = "automaton-simulator"
+description = "Library with DFA, NFA, L-DFA, L-NFA."
+version = "0.1.2"
 edition = "2024"
 authors = ["Lefterache Ștefan <lefterache.stefan.8@gmail.com>"]
+license = "GPL-3.0-or-later"
+categories = ["algorithms", "mathematics", "simulation"]
+keywords = ["dfa", "automaton"]
+rust-version = "1.85"
 
 [dependencies]
 petgraph = "0.8.3"

@@ -1,4 +1,4 @@
-//! DFA Simulator
+//! Automaton Simulator
 
 #![forbid(unsafe_code)]
 #![forbid(missing_docs)]
@@ -7,6 +7,7 @@
 #![deny(clippy::pedantic)]
 #![forbid(clippy::missing_panics_doc)]
 #![forbid(clippy::unwrap_used)]
+#![forbid(rustdoc::missing_crate_level_docs)]
 
 /// Deterministic Finite Automaton module.
 pub mod dfa;

@@ -1,4 +1,4 @@
-use dfa_simulator::prelude::*;
+use automaton_simulator::prelude::*;
 
 #[test]
 fn test_load_all_files() {

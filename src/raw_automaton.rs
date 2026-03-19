@@ -1,3 +1,5 @@
+use std::fs;
+use std::io;
 use std::num::ParseIntError;
 use thiserror::Error;
 
@@ -52,7 +54,7 @@ impl<T: From<RawAutomaton>> AutomatonFromFile for T {
 pub enum ReadGraphError {
     /// Failed to read the file.
     #[error("read file error")]
-    FileReadFailure(#[from] std::io::Error),
+    FileReadFailure(#[from] io::Error),
     /// Bad input format.
     #[error("bad input")]
     BadInput,
@@ -68,7 +70,7 @@ pub enum ReadGraphError {
 }
 
 fn read_raw_data(path: impl AsRef<str>) -> Result<RawAutomaton, ReadGraphError> {
-    let input = std::fs::read_to_string(path.as_ref())?;
+    let input = fs::read_to_string(path.as_ref())?;
     let mut lines = input.lines();
 
     let alphabet = lines.next().ok_or(ReadGraphError::MissingAlphabet)?;

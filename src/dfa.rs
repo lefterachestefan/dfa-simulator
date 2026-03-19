@@ -75,10 +75,7 @@ mod tests {
             initial_state: 0,
             final_states: vec![1],
             alphabet: vec!["a".to_string(), "b".to_string()],
-            edges: vec![
-                (0, 1, "a".to_string()),
-                (1, 0, "b".to_string()),
-            ],
+            edges: vec![(0, 1, "a".to_string()), (1, 0, "b".to_string())],
         };
         let dfa = Dfa::from(raw);
         assert!(dfa.run("a"));
@@ -92,10 +89,7 @@ mod tests {
             initial_state: 0,
             final_states: vec![1],
             alphabet: vec!["a".to_string(), "b".to_string()],
-            edges: vec![
-                (0, 1, "a".to_string()),
-                (1, 0, "b".to_string()),
-            ],
+            edges: vec![(0, 1, "a".to_string()), (1, 0, "b".to_string())],
         };
         let dfa = Dfa::from(raw);
         assert!(!dfa.run(""));
@@ -110,10 +104,7 @@ mod tests {
             initial_state: 0,
             final_states: vec![1],
             alphabet: vec!["ab".to_string(), "c".to_string()],
-            edges: vec![
-                (0, 1, "ab".to_string()),
-                (1, 0, "c".to_string()),
-            ],
+            edges: vec![(0, 1, "ab".to_string()), (1, 0, "c".to_string())],
         };
         let dfa = Dfa::from(raw);
         assert!(dfa.run("ab"));

@@ -1,14 +1,4 @@
-//! Deterministic Finite Automaton Simulator
-
-#![forbid(unsafe_code)]
-#![forbid(missing_docs)]
-#![forbid(clippy::all)]
-#![forbid(clippy::nursery)]
-#![deny(clippy::pedantic)]
-#![forbid(clippy::missing_panics_doc)]
-#![forbid(clippy::unwrap_used)]
-
-use dfa_simulator::prelude::*;
+use automaton_simulator::prelude::*;
 
 fn main() -> Result<(), ReadGraphError> {
     println!("--- DFA ---");
