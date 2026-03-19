@@ -8,7 +8,7 @@ use std::fs;
 use std::io;
 use thiserror::Error;
 
-/// itermediate representation automaton (builder)
+/// Itermediate representation automaton (builder)
 #[derive(Debug, Clone)]
 pub struct RawAutomaton {
     pub initial_state: u32,
@@ -22,8 +22,8 @@ pub struct RawAutomaton {
 fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
     let (from, to, symbol) = text.as_ref().split(',').map(str::trim).collect_tuple()?;
 
-    let from = from.parse::<u32>().ok()?;
-    let to = to.parse::<u32>().ok()?;
+    let from = from.parse().ok()?;
+    let to = to.parse().ok()?;
     let symbol = match symbol {
         "lambda" | "epsilon" => String::new(),
         _ => symbol.to_string(),
@@ -112,16 +112,16 @@ pub fn advance_empty_word(
     graph: &DiGraph<u32, String>,
     states: &HashSet<NodeIndex>,
 ) -> HashSet<NodeIndex> {
-    let mut closure = states.clone();
+    let mut new_states = states.clone();
     let mut stack: Vec<NodeIndex> = states.iter().copied().collect();
     while let Some(current) = stack.pop() {
         for edge in graph.edges_directed(current, Direction::Outgoing) {
-            if edge.weight().is_empty() && closure.insert(edge.target()) {
+            if edge.weight().is_empty() && new_states.insert(edge.target()) {
                 stack.push(edge.target());
             }
         }
     }
-    closure
+    new_states
 }
 
 #[cfg(test)]
