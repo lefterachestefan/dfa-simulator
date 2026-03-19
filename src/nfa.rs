@@ -16,9 +16,9 @@ pub struct Nfa {
 impl From<RawAutomaton> for Nfa {
     fn from(raw: RawAutomaton) -> Self {
         for edge in &raw.edges {
-            assert!(!edge.2.is_empty(), "NFA cannot have lambda transitions");
-            assert!(raw.alphabet.contains(&edge.2));
+            assert!(!edge.2.is_empty() && raw.alphabet.contains(&edge.2));
         }
+
         Self {
             initial_state: raw.initial_state,
             final_states: raw.final_states,

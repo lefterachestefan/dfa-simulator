@@ -15,9 +15,12 @@ pub struct LambdaNfa {
 
 impl From<RawAutomaton> for LambdaNfa {
     fn from(raw: RawAutomaton) -> Self {
-        for edge in &raw.edges {
-            assert!(edge.2.is_empty() || raw.alphabet.contains(&edge.2));
-        }
+        assert!(
+            raw.edges
+                .iter()
+                .all(|edge| edge.2.is_empty() || raw.alphabet.contains(&edge.2))
+        );
+
         Self {
             initial_state: raw.initial_state,
             final_states: raw.final_states,
