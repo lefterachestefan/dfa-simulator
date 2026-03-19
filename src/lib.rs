@@ -17,7 +17,7 @@ pub mod lambda_nfa;
 /// Nondeterministic Finite Automaton module.
 pub mod nfa;
 /// Raw Automaton and parsing logic.
-pub mod raw_automaton;
+mod raw_automaton;
 
 /// Imports you probably want.
 pub mod prelude {

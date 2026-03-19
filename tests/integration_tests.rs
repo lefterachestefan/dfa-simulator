@@ -1,8 +1,4 @@
-use dfa_simulator::dfa::Dfa;
-use dfa_simulator::nfa::Nfa;
-use dfa_simulator::lambda_dfa::LambdaDfa;
-use dfa_simulator::lambda_nfa::LambdaNfa;
-use dfa_simulator::raw_automaton::AutomatonFromFile;
+use dfa_simulator::prelude::*;
 
 #[test]
 fn test_load_all_files() {
