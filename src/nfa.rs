@@ -111,4 +111,29 @@ mod tests {
         assert!(!nfa.run("b"));
         assert!(!nfa.run("aba"));
     }
+
+    #[test]
+    fn another() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![2, 4],
+            alphabet: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+            edges: vec![
+                (0, 1, "a".into()),
+                (0, 3, "a".into()),
+                (1, 1, "a".into()),
+                (1, 2, "b".into()),
+                (2, 2, "b".into()),
+                (3, 3, "a".into()),
+                (3, 4, "c".into()),
+                (4, 4, "c".into()),
+            ],
+        };
+        let nfa = Nfa::from(raw);
+        assert!(nfa.run("ab"));
+        assert!(nfa.run("abb"));
+        assert!(!nfa.run("abc"));
+        assert!(nfa.run("aaaabbbbbb"));
+        assert!(nfa.run("aaaacccccc"));
+    }
 }
