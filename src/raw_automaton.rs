@@ -30,10 +30,7 @@ pub trait AutomatonFromFile: Sized {
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError>;
 }
 
-impl<T> AutomatonFromFile for T
-where
-    T: From<RawAutomaton>,
-{
+impl<T: From<RawAutomaton>> AutomatonFromFile for T {
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError> {
         read_raw_data(file_path).map(Self::from)
     }

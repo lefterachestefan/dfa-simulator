@@ -25,6 +25,7 @@ impl From<RawAutomaton> for LambdaDfa {
         }
     }
 }
+
 impl LambdaDfa {
     fn epsilon_closure(&self, states: &HashSet<NodeIndex>) -> HashSet<NodeIndex> {
         let mut closure = states.clone();

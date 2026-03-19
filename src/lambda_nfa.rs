@@ -11,6 +11,7 @@ pub struct LambdaNfa {
     graph: DiGraph<u32, String>,
     alphabet: Vec<String>,
 }
+
 impl From<RawAutomaton> for LambdaNfa {
     fn from(raw: RawAutomaton) -> Self {
         for edge in &raw.edges {
@@ -24,6 +25,7 @@ impl From<RawAutomaton> for LambdaNfa {
         }
     }
 }
+
 impl LambdaNfa {
     fn epsilon_closure(&self, states: &HashSet<NodeIndex>) -> HashSet<NodeIndex> {
         let mut closure = states.clone();

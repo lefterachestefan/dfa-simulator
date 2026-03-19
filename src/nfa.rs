@@ -26,6 +26,7 @@ impl From<RawAutomaton> for Nfa {
         }
     }
 }
+
 impl Nfa {
     pub fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
