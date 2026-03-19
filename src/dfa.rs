@@ -67,6 +67,7 @@ impl Dfa {
     }
 }
 
+// TODO: conversion between automatons
 impl From<LambdaNfa> for Dfa {
     fn from(_: LambdaNfa) -> Self {
         todo!()
