@@ -1,4 +1,4 @@
-use crate::raw_automaton::RawAutomaton;
+use crate::raw_automaton::{RawAutomaton, advance_empty_word};
 use petgraph::Direction;
 use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::EdgeRef;
@@ -28,24 +28,11 @@ impl From<RawAutomaton> for LambdaNfa {
 }
 
 impl LambdaNfa {
-    fn epsilon_closure(&self, states: &HashSet<NodeIndex>) -> HashSet<NodeIndex> {
-        let mut closure = states.clone();
-        let mut stack: Vec<NodeIndex> = states.iter().copied().collect();
-        while let Some(current) = stack.pop() {
-            for edge in self.graph.edges_directed(current, Direction::Outgoing) {
-                if edge.weight().is_empty() && closure.insert(edge.target()) {
-                    stack.push(edge.target());
-                }
-            }
-        }
-        closure
-    }
-
     /// Runs the Lambda-NFA on the given input string.
     pub fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
-        current_states = self.epsilon_closure(&current_states);
+        current_states = advance_empty_word(&self.graph, &current_states);
         let mut current_window = input.as_ref();
         while !current_window.is_empty() {
             let mut word_len = current_window.len();
@@ -69,7 +56,7 @@ impl LambdaNfa {
                     }
                 }
             }
-            current_states = self.epsilon_closure(&next_states);
+            current_states = advance_empty_word(&self.graph, &next_states);
             if current_states.is_empty() {
                 return false;
             }

@@ -1,4 +1,8 @@
 use itertools::Itertools;
+use petgraph::Direction;
+use petgraph::graph::{DiGraph, NodeIndex};
+use petgraph::visit::EdgeRef;
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::fs;
 use std::io;
@@ -106,6 +110,22 @@ fn read_raw_data(path: impl AsRef<str>) -> Result<RawAutomaton, ReadGraphError> 
         edges,
         alphabet,
     })
+}
+
+pub fn advance_empty_word(
+    graph: &DiGraph<u32, String>,
+    states: &HashSet<NodeIndex>,
+) -> HashSet<NodeIndex> {
+    let mut closure = states.clone();
+    let mut stack: Vec<NodeIndex> = states.iter().copied().collect();
+    while let Some(current) = stack.pop() {
+        for edge in graph.edges_directed(current, Direction::Outgoing) {
+            if edge.weight().is_empty() && closure.insert(edge.target()) {
+                stack.push(edge.target());
+            }
+        }
+    }
+    closure
 }
 
 #[cfg(test)]
