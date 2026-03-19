@@ -11,13 +11,9 @@ use thiserror::Error;
 /// itermediate representation automaton (builder)
 #[derive(Debug, Clone)]
 pub struct RawAutomaton {
-    /// The initial state index.
     pub initial_state: u32,
-    /// List of final state indices.
     pub final_states: Vec<u32>,
-    /// List of edges: (from, to, symbol).
     pub edges: Vec<(u32, u32, String)>,
-    /// The alphabet of the automaton.
     pub alphabet: Vec<String>,
 }
 

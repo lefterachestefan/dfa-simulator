@@ -1,3 +1,4 @@
+use crate::prelude::LambdaNfa;
 use crate::raw_automaton::RawAutomaton;
 use petgraph::Direction;
 use petgraph::graph::{DiGraph, NodeIndex};
@@ -63,6 +64,12 @@ impl Dfa {
         }
         self.final_states
             .contains(&u32::try_from(current_state.index()).unwrap_or(0))
+    }
+}
+
+impl From<LambdaNfa> for Dfa {
+    fn from(_: LambdaNfa) -> Self {
+        todo!()
     }
 }
 
