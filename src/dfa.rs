@@ -27,6 +27,7 @@ impl From<RawAutomaton> for Dfa {
 }
 
 impl Dfa {
+    /// Runs the DFA on the given input string.
     pub fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_state = NodeIndex::new(self.initial_state as usize);
         let mut current_window = input.as_ref();
@@ -61,5 +62,64 @@ impl Dfa {
         }
         self.final_states
             .contains(&u32::try_from(current_state.index()).unwrap_or(0))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dfa_accepts() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![1],
+            alphabet: vec!["a".to_string(), "b".to_string()],
+            edges: vec![
+                (0, 1, "a".to_string()),
+                (1, 0, "b".to_string()),
+            ],
+        };
+        let dfa = Dfa::from(raw);
+        assert!(dfa.run("a"));
+        assert!(dfa.run("aba"));
+        assert!(dfa.run("ababa"));
+    }
+
+    #[test]
+    fn test_dfa_rejects() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![1],
+            alphabet: vec!["a".to_string(), "b".to_string()],
+            edges: vec![
+                (0, 1, "a".to_string()),
+                (1, 0, "b".to_string()),
+            ],
+        };
+        let dfa = Dfa::from(raw);
+        assert!(!dfa.run(""));
+        assert!(!dfa.run("b"));
+        assert!(!dfa.run("ab"));
+        assert!(!dfa.run("aa"));
+    }
+
+    #[test]
+    fn test_dfa_multi_char_symbol() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![1],
+            alphabet: vec!["ab".to_string(), "c".to_string()],
+            edges: vec![
+                (0, 1, "ab".to_string()),
+                (1, 0, "c".to_string()),
+            ],
+        };
+        let dfa = Dfa::from(raw);
+        assert!(dfa.run("ab"));
+        assert!(dfa.run("abcab"));
+        assert!(!dfa.run("a"));
+        assert!(!dfa.run("b"));
+        assert!(!dfa.run("abc"));
     }
 }

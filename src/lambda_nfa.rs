@@ -40,6 +40,7 @@ impl LambdaNfa {
         closure
     }
 
+    /// Runs the Lambda-NFA on the given input string.
     pub fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
@@ -76,5 +77,54 @@ impl LambdaNfa {
             self.final_states
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lambda_nfa_accepts() {
+        // NFA for a*b*c*
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![2],
+            alphabet: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+            edges: vec![
+                (0, 0, "a".to_string()),
+                (0, 1, String::new()),
+                (1, 1, "b".to_string()),
+                (1, 2, String::new()),
+                (2, 2, "c".to_string()),
+            ],
+        };
+        let nfa = LambdaNfa::from(raw);
+        assert!(nfa.run(""));
+        assert!(nfa.run("a"));
+        assert!(nfa.run("b"));
+        assert!(nfa.run("c"));
+        assert!(nfa.run("aaabbbccc"));
+        assert!(nfa.run("abc"));
+    }
+
+    #[test]
+    fn test_lambda_nfa_rejects() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![2],
+            alphabet: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+            edges: vec![
+                (0, 0, "a".to_string()),
+                (0, 1, String::new()),
+                (1, 1, "b".to_string()),
+                (1, 2, String::new()),
+                (2, 2, "c".to_string()),
+            ],
+        };
+        let nfa = LambdaNfa::from(raw);
+        assert!(!nfa.run("ba"));
+        assert!(!nfa.run("cb"));
+        assert!(!nfa.run("ca"));
     }
 }

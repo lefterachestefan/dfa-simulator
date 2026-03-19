@@ -8,17 +8,7 @@
 #![forbid(clippy::missing_panics_doc)]
 #![forbid(clippy::unwrap_used)]
 
-mod dfa;
-mod lambda_dfa;
-mod lambda_nfa;
-mod nfa;
-mod raw_automaton;
-
-use dfa::Dfa;
-use lambda_dfa::LambdaDfa;
-use lambda_nfa::LambdaNfa;
-use nfa::Nfa;
-use raw_automaton::{AutomatonFromFile, ReadGraphError};
+use dfa_simulator::prelude::*;
 
 fn main() -> Result<(), ReadGraphError> {
     println!("--- DFA ---");

@@ -28,6 +28,7 @@ impl From<RawAutomaton> for Nfa {
 }
 
 impl Nfa {
+    /// Runs the NFA on the given input string.
     pub fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
@@ -63,5 +64,50 @@ impl Nfa {
             self.final_states
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_nfa_accepts() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![2],
+            alphabet: vec!["a".to_string(), "b".to_string()],
+            edges: vec![
+                (0, 0, "a".to_string()),
+                (0, 0, "b".to_string()),
+                (0, 1, "a".to_string()),
+                (1, 2, "b".to_string()),
+            ],
+        };
+        let nfa = Nfa::from(raw);
+        assert!(nfa.run("ab"));
+        assert!(nfa.run("aab"));
+        assert!(nfa.run("bab"));
+        assert!(nfa.run("aaab"));
+    }
+
+    #[test]
+    fn test_nfa_rejects() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![2],
+            alphabet: vec!["a".to_string(), "b".to_string()],
+            edges: vec![
+                (0, 0, "a".to_string()),
+                (0, 0, "b".to_string()),
+                (0, 1, "a".to_string()),
+                (1, 2, "b".to_string()),
+            ],
+        };
+        let nfa = Nfa::from(raw);
+        assert!(!nfa.run(""));
+        assert!(!nfa.run("a"));
+        assert!(!nfa.run("b"));
+        assert!(!nfa.run("aba"));
     }
 }
