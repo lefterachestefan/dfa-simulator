@@ -1,3 +1,5 @@
+use crate::Automaton;
+use crate::prelude::{Dfa, LambdaDfa, Nfa};
 use crate::raw_automaton::{RawAutomaton, advance_empty_word};
 use petgraph::Direction;
 use petgraph::graph::{DiGraph, NodeIndex};
@@ -7,32 +9,15 @@ use std::collections::HashSet;
 /// Nondeterministic Finite Automaton with Lambda transitions
 #[derive(Debug, Clone)]
 pub struct LambdaNfa {
-    initial_state: u32,
-    final_states: Vec<u32>,
-    graph: DiGraph<u32, String>,
-    alphabet: Vec<String>,
+    pub(crate) initial_state: u32,
+    pub(crate) final_states: Vec<u32>,
+    pub(crate) graph: DiGraph<u32, String>,
+    pub(crate) alphabet: Vec<String>,
 }
 
-impl From<RawAutomaton> for LambdaNfa {
-    fn from(raw: RawAutomaton) -> Self {
-        assert!(
-            raw.edges
-                .iter()
-                .all(|edge| edge.2.is_empty() || raw.alphabet.contains(&edge.2))
-        );
-
-        Self {
-            initial_state: raw.initial_state,
-            final_states: raw.final_states,
-            graph: DiGraph::from_edges(raw.edges),
-            alphabet: raw.alphabet,
-        }
-    }
-}
-
-impl LambdaNfa {
+impl Automaton for LambdaNfa {
     /// Runs the Lambda-NFA on the given input string.
-    pub fn run(&self, input: impl AsRef<str>) -> bool {
+    fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
         current_states = advance_empty_word(&self.graph, &current_states);
@@ -69,7 +54,64 @@ impl LambdaNfa {
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
         })
     }
+
+    /// Minimizes the `LambdaNfa` by converting to DFA, minimizing the DFA, and converting back.
+    fn minimize(&self) -> Self {
+        Self::from(Dfa::from(self.clone()).minimize())
+    }
 }
+
+impl From<Dfa> for LambdaNfa {
+    fn from(dfa: Dfa) -> Self {
+        Self {
+            initial_state: dfa.initial_state,
+            final_states: dfa.final_states,
+            graph: dfa.graph,
+            alphabet: dfa.alphabet,
+        }
+    }
+}
+
+impl From<Nfa> for LambdaNfa {
+    fn from(nfa: Nfa) -> Self {
+        Self {
+            initial_state: nfa.initial_state,
+            final_states: nfa.final_states,
+            graph: nfa.graph,
+            alphabet: nfa.alphabet,
+        }
+    }
+}
+
+impl From<LambdaDfa> for LambdaNfa {
+    fn from(ldfa: LambdaDfa) -> Self {
+        Self {
+            initial_state: ldfa.initial_state,
+            final_states: ldfa.final_states,
+            graph: ldfa.graph,
+            alphabet: ldfa.alphabet,
+        }
+    }
+}
+
+impl From<RawAutomaton> for LambdaNfa {
+    fn from(raw: RawAutomaton) -> Self {
+        assert!(
+            raw.edges
+                .iter()
+                .all(|edge| edge.2.is_empty() || raw.alphabet.contains(&edge.2))
+        );
+
+        Self {
+            initial_state: raw.initial_state,
+            final_states: raw.final_states,
+            graph: DiGraph::from_edges(raw.edges),
+            alphabet: raw.alphabet,
+        }
+    }
+}
+
+impl LambdaNfa {}
 
 #[cfg(test)]
 mod tests {

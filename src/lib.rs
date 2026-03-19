@@ -20,12 +20,22 @@ pub mod nfa;
 /// Raw Automaton and parsing logic.
 mod raw_automaton;
 
+/// General trait for all Finite Automatons.
+pub trait Automaton: Sized + Clone {
+    /// Runs the automaton on the given input string.
+    fn run(&self, input: impl AsRef<str>) -> bool;
+    /// Minimizes the automaton optimally.
+    #[must_use]
+    fn minimize(&self) -> Self;
+}
+
 /// Imports you probably want.
 pub mod prelude {
 
+    pub use crate::Automaton;
     pub use crate::dfa::Dfa;
     pub use crate::lambda_dfa::LambdaDfa;
     pub use crate::lambda_nfa::LambdaNfa;
     pub use crate::nfa::Nfa;
-    pub use crate::raw_automaton::{Automaton, ReadGraphError};
+    pub use crate::raw_automaton::{Loadable, ReadGraphError};
 }

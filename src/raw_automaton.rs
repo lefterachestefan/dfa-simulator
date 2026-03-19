@@ -33,7 +33,7 @@ fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
 }
 
 /// Trait for reading an automaton from a file.
-pub trait Automaton: Sized + Debug + Clone {
+pub trait Loadable: Sized + Debug + Clone {
     /// Tries to read an automaton from the given file path.
     ///
     /// # Errors
@@ -42,7 +42,7 @@ pub trait Automaton: Sized + Debug + Clone {
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError>;
 }
 
-impl<T: From<RawAutomaton> + Debug + Clone> Automaton for T {
+impl<T: From<RawAutomaton> + Debug + Clone> Loadable for T {
     #[inline]
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError> {
         read_raw_data(file_path).map(Self::from)
