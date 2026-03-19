@@ -5,6 +5,7 @@ use petgraph::visit::EdgeRef;
 use std::collections::HashSet;
 
 /// Deterministic Finite Automaton with Lambda transitions
+#[derive(Debug, Clone)]
 pub struct LambdaDfa {
     initial_state: u32,
     final_states: Vec<u32>,

@@ -1,9 +1,11 @@
+use itertools::Itertools;
+use std::fmt::Debug;
 use std::fs;
 use std::io;
-use std::num::ParseIntError;
 use thiserror::Error;
 
 /// itermediate representation automaton (builder)
+#[derive(Debug, Clone)]
 pub struct RawAutomaton {
     /// The initial state index.
     pub initial_state: u32,
@@ -15,26 +17,23 @@ pub struct RawAutomaton {
     pub alphabet: Vec<String>,
 }
 
+/// "state,state,symbol" -> (u32, u32, String)
+#[inline]
 fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
-    let mut splitted = text.as_ref().split(',');
-    let from = splitted.next()?;
-    let to = splitted.next()?;
-    let symbol = splitted.next()?.trim();
+    let (from, to, symbol) = text.as_ref().split(',').map(str::trim).collect_tuple()?;
 
-    let from = from.trim().parse::<u32>().ok()?;
-    let to = to.trim().parse::<u32>().ok()?;
-
-    let symbol = if symbol == "lambda" || symbol == "epsilon" {
-        String::new()
-    } else {
-        symbol.to_string()
+    let from = from.parse::<u32>().ok()?;
+    let to = to.parse::<u32>().ok()?;
+    let symbol = match symbol {
+        "lambda" | "epsilon" => String::new(),
+        _ => symbol.to_string(),
     };
 
     Some((from, to, symbol))
 }
 
 /// Trait for reading an automaton from a file.
-pub trait AutomatonFromFile: Sized {
+pub trait Automaton: Sized + Debug + Clone {
     /// Tries to read an automaton from the given file path.
     ///
     /// # Errors
@@ -43,7 +42,8 @@ pub trait AutomatonFromFile: Sized {
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError>;
 }
 
-impl<T: From<RawAutomaton>> AutomatonFromFile for T {
+impl<T: From<RawAutomaton> + Debug + Clone> Automaton for T {
+    #[inline]
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError> {
         read_raw_data(file_path).map(Self::from)
     }
@@ -69,34 +69,36 @@ pub enum ReadGraphError {
     MissingFinalStates,
 }
 
+#[inline]
+fn split_comma_nonempty(text: &str) -> impl Iterator<Item = String> {
+    text.split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
 fn read_raw_data(path: impl AsRef<str>) -> Result<RawAutomaton, ReadGraphError> {
+    use ReadGraphError as RGE;
     let input = fs::read_to_string(path.as_ref())?;
     let mut lines = input.lines();
 
-    let alphabet = lines.next().ok_or(ReadGraphError::MissingAlphabet)?;
-    let initial_state = lines.next().ok_or(ReadGraphError::MissingInitialState)?;
-    let final_states = lines.next().ok_or(ReadGraphError::MissingFinalStates)?;
+    let alphabet = lines.next().ok_or(RGE::MissingAlphabet)?;
+    let initial_state = lines.next().ok_or(RGE::MissingInitialState)?;
+    let final_states = lines.next().ok_or(RGE::MissingFinalStates)?;
     let text_edges = lines;
 
-    let alphabet: Vec<String> = alphabet
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
-    let initial_state = initial_state
-        .trim()
-        .parse::<u32>()
-        .map_err(|_| ReadGraphError::BadInput)?;
-    let final_states: Vec<u32> = final_states
-        .split(',')
-        .filter(|x| !x.trim().is_empty())
-        .map(|x| x.trim().parse::<u32>())
-        .collect::<Result<Vec<u32>, ParseIntError>>()
-        .map_err(|_| ReadGraphError::BadInput)?;
+    let alphabet = split_comma_nonempty(alphabet).collect();
+
+    let initial_state = initial_state.trim().parse().map_err(|_| RGE::BadInput)?;
+
+    let final_states = split_comma_nonempty(final_states)
+        .map(|x| x.parse())
+        .collect::<Result<_, _>>()
+        .map_err(|_| RGE::BadInput)?;
+
     let edges = text_edges
         .map(convert_edge_text_line)
-        .collect::<Option<Vec<(u32, u32, String)>>>()
-        .ok_or(ReadGraphError::BadInput)?;
+        .collect::<Option<_>>()
+        .ok_or(RGE::BadInput)?;
 
     Ok(RawAutomaton {
         initial_state,

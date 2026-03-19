@@ -4,6 +4,7 @@ use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::EdgeRef;
 
 /// Deterministic Finite Automaton
+#[derive(Debug, Clone)]
 pub struct Dfa {
     initial_state: u32,
     final_states: Vec<u32>,

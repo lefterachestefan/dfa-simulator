@@ -5,6 +5,7 @@ use petgraph::visit::EdgeRef;
 use std::collections::HashSet;
 
 /// Nondeterministic Finite Automaton with Lambda transitions
+#[derive(Debug, Clone)]
 pub struct LambdaNfa {
     initial_state: u32,
     final_states: Vec<u32>,
@@ -86,7 +87,6 @@ mod tests {
 
     #[test]
     fn test_lambda_nfa_accepts() {
-        // NFA for a*b*c*
         let raw = RawAutomaton {
             initial_state: 0,
             final_states: vec![2],

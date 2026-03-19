@@ -5,6 +5,7 @@ use petgraph::visit::EdgeRef;
 use std::collections::HashSet;
 
 /// Nondeterministic Finite Automaton
+#[derive(Debug, Clone)]
 pub struct Nfa {
     initial_state: u32,
     final_states: Vec<u32>,

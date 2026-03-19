@@ -27,5 +27,5 @@ pub mod prelude {
     pub use crate::lambda_dfa::LambdaDfa;
     pub use crate::lambda_nfa::LambdaNfa;
     pub use crate::nfa::Nfa;
-    pub use crate::raw_automaton::{AutomatonFromFile, ReadGraphError};
+    pub use crate::raw_automaton::{Automaton, ReadGraphError};
 }
