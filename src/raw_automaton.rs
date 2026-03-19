@@ -25,7 +25,7 @@ fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
     let from = from.parse().ok()?;
     let to = to.parse().ok()?;
     let symbol = match symbol {
-        "lambda" | "epsilon" => String::new(),
+        "lambda" | "epsilon" | "λ" => String::new(),
         _ => symbol.to_string(),
     };
 
