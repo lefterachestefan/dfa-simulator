@@ -1,9 +1,13 @@
-use crate::Automaton;
-use crate::prelude::{Dfa, LambdaDfa, Nfa};
-use crate::raw_automaton::{RawAutomaton, advance_empty_word};
-use petgraph::Direction;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::EdgeRef;
+use crate::{
+    Automaton,
+    prelude::*,
+    raw_automaton::{RawAutomaton, advance_empty_word},
+};
+use petgraph::{
+    Direction,
+    graph::{DiGraph, NodeIndex},
+    visit::EdgeRef,
+};
 use std::collections::HashSet;
 
 /// Nondeterministic Finite Automaton with Lambda transitions
@@ -22,6 +26,7 @@ impl Automaton for LambdaNfa {
         current_states.insert(NodeIndex::new(self.initial_state as usize));
         current_states = advance_empty_word(&self.graph, &current_states);
         let mut current_window = input.as_ref();
+
         while !current_window.is_empty() {
             let mut word_len = current_window.len();
             while word_len > 0
@@ -49,12 +54,12 @@ impl Automaton for LambdaNfa {
                 return false;
             }
         }
+
         current_states.iter().any(|s| {
             self.final_states
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
         })
     }
-
     /// Minimizes the `LambdaNfa` by converting to DFA, minimizing the DFA, and converting back.
     fn minimize(&self) -> Self {
         Self::from(Dfa::from(self.clone()).minimize())
@@ -101,7 +106,6 @@ impl From<RawAutomaton> for LambdaNfa {
                 .iter()
                 .all(|edge| edge.2.is_empty() || raw.alphabet.contains(&edge.2))
         );
-
         Self {
             initial_state: raw.initial_state,
             final_states: raw.final_states,
@@ -110,8 +114,6 @@ impl From<RawAutomaton> for LambdaNfa {
         }
     }
 }
-
-impl LambdaNfa {}
 
 #[cfg(test)]
 mod tests {

@@ -1,10 +1,14 @@
-use crate::Automaton;
-use crate::prelude::{LambdaDfa, LambdaNfa, Nfa};
-use crate::raw_automaton::{RawAutomaton, advance_empty_word};
-use petgraph::Direction;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::EdgeRef;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
+use crate::{
+    Automaton,
+    prelude::*,
+    raw_automaton::{RawAutomaton, advance_empty_word},
+};
+use petgraph::{
+    Direction,
+    graph::{DiGraph, NodeIndex},
+    visit::EdgeRef,
+};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque, hash_map::Entry};
 
 /// Deterministic Finite Automaton
 #[derive(Debug, Clone)]
@@ -20,6 +24,7 @@ impl Automaton for Dfa {
     fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_state = NodeIndex::new(self.initial_state as usize);
         let mut current_window = input.as_ref();
+
         while !current_window.is_empty() {
             let mut word_len = current_window.len();
             while word_len > 0
@@ -49,6 +54,7 @@ impl Automaton for Dfa {
                 None => return false,
             }
         }
+
         self.final_states
             .contains(&u32::try_from(current_state.index()).unwrap_or(0))
     }
@@ -58,6 +64,7 @@ impl Automaton for Dfa {
         let mut reachable = HashSet::new();
         let mut queue = VecDeque::new();
         let initial_node = NodeIndex::new(self.initial_state as usize);
+
         reachable.insert(initial_node);
         queue.push_back(initial_node);
 
@@ -76,6 +83,7 @@ impl Automaton for Dfa {
 
         let mut partition = create_partition(&self.final_states, &nodes);
         let mut num_partitions = 2;
+
         loop {
             let mut next_partition: HashMap<NodeIndex, usize> = HashMap::new();
             let mut signatures: HashMap<(usize, BTreeMap<String, usize>), usize> = HashMap::new();
@@ -95,7 +103,6 @@ impl Automaton for Dfa {
                     }
                     state_transitions.insert(symbol.clone(), target_part);
                 }
-
                 let signature = (partition[&node], state_transitions);
                 let part_id = if let Some(&id) = signatures.get(&signature) {
                     id
@@ -111,6 +118,7 @@ impl Automaton for Dfa {
             if next_num_partitions == num_partitions {
                 break;
             }
+
             partition = next_partition;
             num_partitions = next_num_partitions;
         }
@@ -125,7 +133,7 @@ impl Automaton for Dfa {
 
         for &node in &nodes {
             let part = partition[&node];
-            if let std::collections::hash_map::Entry::Vacant(e) = part_to_new_id.entry(part) {
+            if let Entry::Vacant(e) = part_to_new_id.entry(part) {
                 e.insert(next_new_id);
                 next_new_id += 1;
             }
@@ -140,6 +148,7 @@ impl Automaton for Dfa {
 
         let mut new_edges = Vec::new();
         let mut seen_edges = HashSet::new();
+
         for &node in &nodes {
             let from_part = partition[&node];
             let from_id = part_to_new_id[&from_part];
@@ -169,12 +178,15 @@ impl Automaton for Dfa {
 
 fn create_partition(final_states: &[u32], nodes: &Vec<NodeIndex>) -> HashMap<NodeIndex, usize> {
     let mut partition: HashMap<NodeIndex, usize> = HashMap::new();
+
     for &node in nodes {
         let is_final = final_states.contains(&u32::try_from(node.index()).unwrap_or(0));
         partition.insert(node, usize::from(is_final));
     }
+
     partition
 }
+
 impl From<Nfa> for Dfa {
     fn from(nfa: Nfa) -> Self {
         Self::from(LambdaNfa::from(nfa))
@@ -202,25 +214,21 @@ impl From<RawAutomaton> for Dfa {
     }
 }
 
-impl Dfa {}
-
 impl From<LambdaNfa> for Dfa {
     fn from(nfa: LambdaNfa) -> Self {
         let mut dfa_states = HashMap::new();
         let mut queue = VecDeque::new();
         let mut dfa_edges: Vec<(u32, u32, String)> = Vec::new();
         let mut dfa_final_states = Vec::new();
-
         let initial_nfa_states = {
             let mut s = HashSet::new();
             s.insert(NodeIndex::new(nfa.initial_state as usize));
             advance_empty_word(&nfa.graph, &s)
         };
-
         let initial_nfa_states_sorted: BTreeSet<NodeIndex> =
             initial_nfa_states.into_iter().collect();
-
         let mut next_dfa_state = 0u32;
+
         dfa_states.insert(initial_nfa_states_sorted.clone(), next_dfa_state);
         queue.push_back(initial_nfa_states_sorted);
         next_dfa_state += 1;
@@ -237,6 +245,7 @@ impl From<LambdaNfa> for Dfa {
 
             for symbol in &nfa.alphabet {
                 let mut next_nfa_states = HashSet::new();
+
                 for &nfa_state in &current_nfa_states {
                     for edge in nfa.graph.edges_directed(nfa_state, Direction::Outgoing) {
                         if edge.weight() == symbol {
@@ -252,7 +261,6 @@ impl From<LambdaNfa> for Dfa {
                 let next_nfa_states_closure = advance_empty_word(&nfa.graph, &next_nfa_states);
                 let next_nfa_states_sorted: BTreeSet<NodeIndex> =
                     next_nfa_states_closure.into_iter().collect();
-
                 let next_dfa_id = if let Some(&id) = dfa_states.get(&next_nfa_states_sorted) {
                     id
                 } else {
@@ -268,9 +276,11 @@ impl From<LambdaNfa> for Dfa {
         }
 
         let mut graph = DiGraph::new();
+
         for i in 0..next_dfa_state {
             graph.add_node(i);
         }
+
         for (from, to, symbol) in dfa_edges {
             graph.add_edge(
                 NodeIndex::new(from as usize),
@@ -351,7 +361,6 @@ mod tests {
         };
         let nfa = LambdaNfa::from(raw);
         let dfa = Dfa::from(nfa);
-
         assert!(dfa.run("b"));
         assert!(dfa.run("ab"));
         assert!(dfa.run("aaab"));
@@ -373,7 +382,6 @@ mod tests {
         };
         let nfa = Nfa::from(raw);
         let dfa = Dfa::from(nfa);
-
         assert!(dfa.run("ab"));
         assert!(dfa.run("aab"));
         assert!(!dfa.run("a"));
@@ -390,7 +398,6 @@ mod tests {
         };
         let ldfa = LambdaDfa::from(raw);
         let dfa = Dfa::from(ldfa);
-
         assert!(dfa.run("a"));
         assert!(!dfa.run(""));
         assert!(!dfa.run("b"));
@@ -412,7 +419,6 @@ mod tests {
         };
         let dfa = Dfa::from(raw);
         let minimized = dfa.minimize();
-
         // 0 and 2 are equivalent, 1 and 3 are equivalent.
         // Minimized DFA should have 2 states.
         assert!(minimized.graph.node_count() <= 2);

@@ -1,5 +1,4 @@
 use automaton_simulator::prelude::*;
-
 #[test]
 fn test_load_all_files() {
     assert!(Dfa::try_read_from_file("dfa.txt").is_ok());

@@ -1,9 +1,13 @@
-use crate::Automaton;
-use crate::prelude::{Dfa, LambdaDfa, LambdaNfa};
-use crate::raw_automaton::{RawAutomaton, advance_empty_word};
-use petgraph::Direction;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::EdgeRef;
+use crate::{
+    Automaton,
+    prelude::*,
+    raw_automaton::{RawAutomaton, advance_empty_word},
+};
+use petgraph::{
+    Direction,
+    graph::{DiGraph, NodeIndex},
+    visit::EdgeRef,
+};
 use std::collections::HashSet;
 
 /// Nondeterministic Finite Automaton
@@ -21,8 +25,10 @@ impl Automaton for Nfa {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
         let mut current_window = input.as_ref();
+
         while !current_window.is_empty() {
             let mut word_len = current_window.len();
+
             while word_len > 0
                 && !self
                     .alphabet
@@ -30,12 +36,15 @@ impl Automaton for Nfa {
             {
                 word_len -= 1;
             }
+
             if word_len == 0 {
                 return false;
             }
+
             let (word, rest) = current_window.split_at(word_len);
             current_window = rest;
             let mut next_states = HashSet::new();
+
             for state in &current_states {
                 for edge in self.graph.edges_directed(*state, Direction::Outgoing) {
                     if *edge.weight() == word {
@@ -43,11 +52,14 @@ impl Automaton for Nfa {
                     }
                 }
             }
+
             current_states = next_states;
+
             if current_states.is_empty() {
                 return false;
             }
         }
+
         current_states.iter().any(|s| {
             self.final_states
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
@@ -140,10 +152,9 @@ impl From<RawAutomaton> for Nfa {
     }
 }
 
-impl Nfa {}
-
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -179,6 +190,7 @@ mod tests {
                 (1, 2, "b".to_string()),
             ],
         };
+
         let nfa = Nfa::from(raw);
         assert!(!nfa.run(""));
         assert!(!nfa.run("a"));
@@ -203,7 +215,9 @@ mod tests {
                 (4, 4, "c".into()),
             ],
         };
+
         let nfa = Nfa::from(raw);
+
         assert!(nfa.run("ab"));
         assert!(nfa.run("abb"));
         assert!(!nfa.run("abc"));
@@ -223,6 +237,7 @@ mod tests {
                 (1, 2, "b".to_string()),
             ],
         };
+
         let lnfa = LambdaNfa::from(raw);
         let nfa = Nfa::from(lnfa);
 

@@ -1,11 +1,9 @@
-use itertools::Itertools;
-use petgraph::Direction;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::EdgeRef;
-use std::collections::HashSet;
-use std::fmt::Debug;
-use std::fs;
-use std::io;
+use petgraph::{
+    Direction,
+    graph::{DiGraph, NodeIndex},
+    visit::EdgeRef,
+};
+use std::{collections::HashSet, fmt::Debug, fs, io};
 use thiserror::Error;
 
 /// Itermediate representation automaton (builder)
@@ -20,20 +18,18 @@ pub struct RawAutomaton {
 /// "state,state,symbol" -> (u32, u32, String)
 #[inline]
 fn convert_edge_text_line(text: impl AsRef<str>) -> Option<(u32, u32, String)> {
-    let (from, to, symbol) = text.as_ref().split(',').map(str::trim).collect_tuple()?;
-
-    let from = from.parse().ok()?;
-    let to = to.parse().ok()?;
-    let symbol = match symbol {
+    let mut splitted = text.as_ref().split(',').map(str::trim);
+    let from = splitted.next()?.parse().ok()?;
+    let to = splitted.next()?.parse().ok()?;
+    let symbol = match splitted.next()? {
         "lambda" | "epsilon" | "λ" => String::new(),
-        _ => symbol.to_string(),
+        x => x.to_string(),
     };
-
     Some((from, to, symbol))
 }
 
 /// Trait for reading an automaton from a file.
-pub trait Loadable: Sized + Debug + Clone {
+pub trait Loadable: Sized + Clone {
     /// Tries to read an automaton from the given file path.
     ///
     /// # Errors
@@ -42,7 +38,7 @@ pub trait Loadable: Sized + Debug + Clone {
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError>;
 }
 
-impl<T: From<RawAutomaton> + Debug + Clone> Loadable for T {
+impl<T: From<RawAutomaton> + Clone> Loadable for T {
     #[inline]
     fn try_read_from_file(file_path: impl AsRef<str>) -> Result<Self, ReadGraphError> {
         read_raw_data(file_path).map(Self::from)
@@ -76,30 +72,25 @@ fn split_comma_nonempty(text: &str) -> impl Iterator<Item = String> {
         .filter(|s| !s.is_empty())
 }
 
+#[inline]
 fn read_raw_data(path: impl AsRef<str>) -> Result<RawAutomaton, ReadGraphError> {
     use ReadGraphError as RGE;
     let input = fs::read_to_string(path.as_ref())?;
     let mut lines = input.lines();
-
     let alphabet = lines.next().ok_or(RGE::MissingAlphabet)?;
     let initial_state = lines.next().ok_or(RGE::MissingInitialState)?;
     let final_states = lines.next().ok_or(RGE::MissingFinalStates)?;
     let text_edges = lines;
-
     let alphabet = split_comma_nonempty(alphabet).collect();
-
     let initial_state = initial_state.trim().parse().map_err(|_| RGE::BadInput)?;
-
     let final_states = split_comma_nonempty(final_states)
         .map(|x| x.parse())
         .collect::<Result<_, _>>()
         .map_err(|_| RGE::BadInput)?;
-
     let edges = text_edges
         .map(convert_edge_text_line)
         .collect::<Option<_>>()
         .ok_or(RGE::BadInput)?;
-
     Ok(RawAutomaton {
         initial_state,
         final_states,
@@ -108,6 +99,7 @@ fn read_raw_data(path: impl AsRef<str>) -> Result<RawAutomaton, ReadGraphError> 
     })
 }
 
+#[inline]
 pub fn advance_empty_word(
     graph: &DiGraph<u32, String>,
     states: &HashSet<NodeIndex>,
