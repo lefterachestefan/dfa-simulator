@@ -13,10 +13,10 @@ fn test_visualize() {
     let dot = dfa.to_dot();
     assert!(dot.contains("digraph"));
     assert!(dot.contains("rankdir=LR"));
-    
+
     let result = dfa.save_png("test_output.png");
     assert!(result.is_ok());
-    
+
     // Clean up
     let _ = std::fs::remove_file("test_output.png");
 }
