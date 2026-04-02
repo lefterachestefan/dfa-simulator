@@ -64,6 +64,10 @@ impl Automaton for LambdaDfa {
     fn minimize(&self) -> Self {
         Self::from(Dfa::from(self.clone()).minimize())
     }
+
+    fn to_dot(&self) -> String {
+        crate::generate_dot(self.initial_state, &self.final_states, &self.graph)
+    }
 }
 
 impl From<Dfa> for LambdaDfa {

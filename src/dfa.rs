@@ -174,6 +174,10 @@ impl Automaton for Dfa {
             alphabet: self.alphabet.clone(),
         }
     }
+
+    fn to_dot(&self) -> String {
+        crate::generate_dot(self.initial_state, &self.final_states, &self.graph)
+    }
 }
 
 fn create_partition(final_states: &[u32], nodes: &Vec<NodeIndex>) -> HashMap<NodeIndex, usize> {
