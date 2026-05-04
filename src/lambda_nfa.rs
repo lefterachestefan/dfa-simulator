@@ -8,7 +8,7 @@ use petgraph::{
     graph::{DiGraph, NodeIndex},
     visit::EdgeRef,
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Nondeterministic Finite Automaton with Lambda transitions
 #[derive(Debug, Clone)]
@@ -67,6 +67,94 @@ impl Automaton for LambdaNfa {
 
     fn to_dot(&self) -> String {
         crate::generate_dot(self.initial_state, &self.final_states, &self.graph)
+    }
+}
+
+impl LambdaNfa {
+    /// Transforms the LambdaNfa into an equivalent Regular Expression string.
+    #[must_use]
+    pub fn to_regex(&self) -> String {
+        let states: Vec<NodeIndex> = self.graph.node_indices().collect();
+        let mut transitions: HashMap<(NodeIndex, NodeIndex), String> = HashMap::new();
+
+        for edge in self.graph.edge_references() {
+            let from = edge.source();
+            let to = edge.target();
+            let weight = edge.weight();
+            let label = if weight.is_empty() {
+                "λ".to_string()
+            } else {
+                weight.clone()
+            };
+
+            transitions
+                .entry((from, to))
+                .and_modify(|e| *e = format!("({}|{})", e, label))
+                .or_insert(label);
+        }
+
+        // 1. Standardize
+        let start_node = NodeIndex::new(states.len());
+        let final_node = NodeIndex::new(states.len() + 1);
+
+        transitions.insert((start_node, NodeIndex::new(self.initial_state as usize)), "λ".to_string());
+        for &f in &self.final_states {
+            transitions.insert((NodeIndex::new(f as usize), final_node), "λ".to_string());
+        }
+
+        // 2. Eliminate intermediate states
+        for &k in &states {
+            let r_kk = transitions.get(&(k, k)).cloned();
+            let mut new_transitions = Vec::new();
+
+            // Find all p -> k and k -> r
+            let predecessors: Vec<NodeIndex> = transitions.keys()
+                .filter(|&&(p, to)| to == k && p != k)
+                .map(|&(p, _)| p)
+                .collect();
+            let successors: Vec<NodeIndex> = transitions.keys()
+                .filter(|&&(from, r)| from == k && r != k)
+                .map(|&(_, r)| r)
+                .collect();
+
+            for &p in &predecessors {
+                for &r in &successors {
+                    let r_pk = &transitions[&(p, k)];
+                    let r_kr = &transitions[&(k, r)];
+                    
+                    let mut term = if r_pk == "λ" { String::new() } else { format!("({})", r_pk) };
+                    if let Some(ref r_kk_val) = r_kk {
+                        if r_kk_val != "λ" {
+                            term.push_str(&format!("({})*", r_kk_val));
+                        }
+                    }
+                    if r_kr != "λ" {
+                        term.push_str(&format!("({})", r_kr));
+                    }
+                    if term.is_empty() { term = "λ".to_string(); }
+
+                    let r_pr = transitions.get(&(p, r));
+                    let new_label = if let Some(r_pr_val) = r_pr {
+                        if r_pr_val == "λ" && term == "λ" {
+                            "λ".to_string()
+                        } else {
+                            format!("({}|{})", r_pr_val, term)
+                        }
+                    } else {
+                        term
+                    };
+                    new_transitions.push(((p, r), new_label));
+                }
+            }
+
+            // Remove state k and its transitions
+            transitions.retain(|&(from, to), _| from != k && to != k);
+            for (edge, label) in new_transitions {
+                transitions.insert(edge, label);
+            }
+        }
+
+        transitions.get(&(start_node, final_node)).cloned().unwrap_or_default()
     }
 }
 
@@ -191,5 +279,23 @@ mod tests {
         assert!(!nfa.run("abc"));
         assert!(nfa.run("aaaabbbbbb"));
         assert!(nfa.run("aaaacccccc"));
+    }
+
+    #[test]
+    fn test_to_regex() {
+        let raw = RawAutomaton {
+            initial_state: 0,
+            final_states: vec![1],
+            alphabet: vec!["a".to_string(), "b".to_string()],
+            edges: vec![(0, 1, "a".to_string()), (1, 1, "b".to_string())],
+        };
+        let nfa = LambdaNfa::from(raw);
+        let regex = nfa.to_regex();
+        let nfa2 = crate::regex::RegexConverter::to_lambda_nfa(&regex);
+        assert!(nfa2.run("a"));
+        assert!(nfa2.run("ab"));
+        assert!(nfa2.run("abbb"));
+        assert!(!nfa2.run(""));
+        assert!(!nfa2.run("b"));
     }
 }

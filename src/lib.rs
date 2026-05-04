@@ -26,6 +26,10 @@ pub mod lambda_dfa;
 pub mod lambda_nfa;
 /// Nondeterministic Finite Automaton module.
 pub mod nfa;
+/// Push-down Automaton module.
+pub mod pda;
+/// Regular Expression to Automaton conversion module.
+pub mod regex;
 /// Raw Automaton and parsing logic.
 mod raw_automaton;
 
