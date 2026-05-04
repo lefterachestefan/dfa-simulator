@@ -46,8 +46,7 @@ impl Pda {
     /// Runs the PDA on the given input string.
     #[must_use]
     pub fn run(&self, input: &str) -> bool {
-        let mut initial_stack = Vec::new();
-        initial_stack.push(self.initial_stack_symbol);
+        let initial_stack = vec![self.initial_stack_symbol];
 
         let mut current_configs = HashSet::new();
         current_configs.insert((NodeIndex::new(self.initial_state as usize), initial_stack));
@@ -128,12 +127,60 @@ mod tests {
         let q2 = graph.add_node(2);
         let q3 = graph.add_node(3);
 
-        graph.add_edge(q0, q1, PdaTransition { input_symbol: Some('a'), pop_symbol: 'Z', push_symbols: vec!['A', 'Z'] });
-        graph.add_edge(q1, q1, PdaTransition { input_symbol: Some('a'), pop_symbol: 'A', push_symbols: vec!['A', 'A'] });
-        graph.add_edge(q1, q2, PdaTransition { input_symbol: Some('b'), pop_symbol: 'A', push_symbols: vec![] });
-        graph.add_edge(q2, q2, PdaTransition { input_symbol: Some('b'), pop_symbol: 'A', push_symbols: vec![] });
-        graph.add_edge(q2, q3, PdaTransition { input_symbol: None, pop_symbol: 'Z', push_symbols: vec!['Z'] });
-        graph.add_edge(q0, q3, PdaTransition { input_symbol: None, pop_symbol: 'Z', push_symbols: vec!['Z'] });
+        graph.add_edge(
+            q0,
+            q1,
+            PdaTransition {
+                input_symbol: Some('a'),
+                pop_symbol: 'Z',
+                push_symbols: vec!['A', 'Z'],
+            },
+        );
+        graph.add_edge(
+            q1,
+            q1,
+            PdaTransition {
+                input_symbol: Some('a'),
+                pop_symbol: 'A',
+                push_symbols: vec!['A', 'A'],
+            },
+        );
+        graph.add_edge(
+            q1,
+            q2,
+            PdaTransition {
+                input_symbol: Some('b'),
+                pop_symbol: 'A',
+                push_symbols: vec![],
+            },
+        );
+        graph.add_edge(
+            q2,
+            q2,
+            PdaTransition {
+                input_symbol: Some('b'),
+                pop_symbol: 'A',
+                push_symbols: vec![],
+            },
+        );
+        graph.add_edge(
+            q2,
+            q3,
+            PdaTransition {
+                input_symbol: None,
+                pop_symbol: 'Z',
+                push_symbols: vec!['Z'],
+            },
+        );
+        graph.add_edge(
+            q0,
+            q3,
+            PdaTransition {
+                input_symbol: None,
+                pop_symbol: 'Z',
+                push_symbols: vec!['Z'],
+            },
+        );
 
         let pda = Pda {
             initial_state: 0,

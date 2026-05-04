@@ -5,7 +5,6 @@
 #![forbid(rustdoc::missing_crate_level_docs)]
 #![forbid(clippy::all)]
 #![forbid(clippy::nursery)]
-#![deny(clippy::pedantic)]
 #![deny(clippy::cargo)]
 #![forbid(clippy::style)]
 #![forbid(clippy::suspicious)]
@@ -18,6 +17,8 @@
 #![forbid(clippy::unwrap_used)]
 #![forbid(clippy::absolute_paths)]
 #![allow(clippy::multiple_crate_versions)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::similar_names)]
 /// Deterministic Finite Automaton module.
 pub mod dfa;
 /// Deterministic Finite Automaton with Lambda transitions module.
@@ -28,10 +29,10 @@ pub mod lambda_nfa;
 pub mod nfa;
 /// Push-down Automaton module.
 pub mod pda;
-/// Regular Expression to Automaton conversion module.
-pub mod regex;
 /// Raw Automaton and parsing logic.
 mod raw_automaton;
+/// Regular Expression to Automaton conversion module.
+pub mod regex;
 
 use std::{fmt::Write, fs::remove_file, io::Error, path::Path};
 

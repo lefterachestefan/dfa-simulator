@@ -71,7 +71,7 @@ impl Automaton for LambdaNfa {
 }
 
 impl LambdaNfa {
-    /// Transforms the LambdaNfa into an equivalent Regular Expression string.
+    /// Transforms the `LambdaNfa` into an equivalent Regular Expression string.
     #[must_use]
     pub fn to_regex(&self) -> String {
         let states: Vec<NodeIndex> = self.graph.node_indices().collect();
@@ -89,7 +89,7 @@ impl LambdaNfa {
 
             transitions
                 .entry((from, to))
-                .and_modify(|e| *e = format!("({}|{})", e, label))
+                .and_modify(|e| *e = format!("({e}|{label})"))
                 .or_insert(label);
         }
 
@@ -97,7 +97,10 @@ impl LambdaNfa {
         let start_node = NodeIndex::new(states.len());
         let final_node = NodeIndex::new(states.len() + 1);
 
-        transitions.insert((start_node, NodeIndex::new(self.initial_state as usize)), "λ".to_string());
+        transitions.insert(
+            (start_node, NodeIndex::new(self.initial_state as usize)),
+            "λ".to_string(),
+        );
         for &f in &self.final_states {
             transitions.insert((NodeIndex::new(f as usize), final_node), "λ".to_string());
         }
@@ -108,11 +111,13 @@ impl LambdaNfa {
             let mut new_transitions = Vec::new();
 
             // Find all p -> k and k -> r
-            let predecessors: Vec<NodeIndex> = transitions.keys()
+            let predecessors: Vec<NodeIndex> = transitions
+                .keys()
                 .filter(|&&(p, to)| to == k && p != k)
                 .map(|&(p, _)| p)
                 .collect();
-            let successors: Vec<NodeIndex> = transitions.keys()
+            let successors: Vec<NodeIndex> = transitions
+                .keys()
                 .filter(|&&(from, r)| from == k && r != k)
                 .map(|&(_, r)| r)
                 .collect();
@@ -121,17 +126,23 @@ impl LambdaNfa {
                 for &r in &successors {
                     let r_pk = &transitions[&(p, k)];
                     let r_kr = &transitions[&(k, r)];
-                    
-                    let mut term = if r_pk == "λ" { String::new() } else { format!("({})", r_pk) };
+
+                    let mut term = if r_pk == "λ" {
+                        String::new()
+                    } else {
+                        format!("({r_pk})")
+                    };
                     if let Some(ref r_kk_val) = r_kk {
                         if r_kk_val != "λ" {
-                            term.push_str(&format!("({})*", r_kk_val));
+                            term.push_str(&format!("({r_kk_val})*"));
                         }
                     }
                     if r_kr != "λ" {
-                        term.push_str(&format!("({})", r_kr));
+                        term.push_str(&format!("({r_kr})"));
                     }
-                    if term.is_empty() { term = "λ".to_string(); }
+                    if term.is_empty() {
+                        term = "λ".to_string();
+                    }
 
                     let r_pr = transitions.get(&(p, r));
                     let new_label = if let Some(r_pr_val) = r_pr {
@@ -154,7 +165,10 @@ impl LambdaNfa {
             }
         }
 
-        transitions.get(&(start_node, final_node)).cloned().unwrap_or_default()
+        transitions
+            .get(&(start_node, final_node))
+            .cloned()
+            .unwrap_or_default()
     }
 }
 
@@ -209,6 +223,8 @@ impl From<RawAutomaton> for LambdaNfa {
 
 #[cfg(test)]
 mod tests {
+    use crate::regex::RegexConverter;
+
     use super::*;
 
     #[test]
@@ -291,7 +307,7 @@ mod tests {
         };
         let nfa = LambdaNfa::from(raw);
         let regex = nfa.to_regex();
-        let nfa2 = crate::regex::RegexConverter::to_lambda_nfa(&regex);
+        let nfa2 = RegexConverter::to_lambda_nfa(&regex);
         assert!(nfa2.run("a"));
         assert!(nfa2.run("ab"));
         assert!(nfa2.run("abbb"));

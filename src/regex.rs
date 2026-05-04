@@ -1,9 +1,6 @@
 use crate::lambda_nfa::LambdaNfa;
-use petgraph::{
-    graph::DiGraph,
-    visit::EdgeRef,
-};
-use std::collections::HashMap;
+use petgraph::{graph::DiGraph, visit::EdgeRef};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Token {
@@ -16,11 +13,11 @@ enum Token {
     RParen,
 }
 
-/// Helper for RegEx to LambdaNfa conversion
+/// Helper for regex to `LambdaNfa` conversion
 pub struct RegexConverter;
 
 impl RegexConverter {
-    fn priority(token: &Token) -> i32 {
+    const fn priority(token: &Token) -> i32 {
         match token {
             Token::LParen => 4,
             Token::Star | Token::Plus => 3,
@@ -97,7 +94,7 @@ impl RegexConverter {
         output
     }
 
-    /// Transforms a Regular Expression string into a LambdaNfa.
+    /// Transforms a regex string into a `LambdaNfa`.
     ///
     /// # Panics
     ///
@@ -110,7 +107,7 @@ impl RegexConverter {
 
         let mut graph = DiGraph::new();
         let mut stack = Vec::new();
-        let mut alphabet = std::collections::HashSet::new();
+        let mut alphabet = HashSet::new();
 
         for token in postfix {
             match token {
