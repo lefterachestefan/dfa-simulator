@@ -29,7 +29,7 @@ pub mod nfa;
 /// Raw Automaton and parsing logic.
 mod raw_automaton;
 
-use std::{fmt::Write, io::Error, path::Path};
+use std::{fmt::Write, fs::remove_file, io::Error, path::Path};
 
 use petgraph::{graph::DiGraph, visit::EdgeRef};
 
@@ -51,6 +51,7 @@ pub trait Automaton: Sized + Clone {
     fn save_png(&self, path: impl AsRef<Path>) -> Result<(), Error> {
         use std::io::Write;
         use std::process::{Command, Stdio};
+        let _ = remove_file(&path);
 
         let dot_content = self.to_dot();
         let mut child = Command::new("dot")
