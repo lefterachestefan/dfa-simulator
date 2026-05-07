@@ -93,7 +93,6 @@ impl LambdaNfa {
                 .or_insert(label);
         }
 
-        // 1. Standardize
         let start_node = NodeIndex::new(states.len());
         let final_node = NodeIndex::new(states.len() + 1);
 
@@ -105,12 +104,11 @@ impl LambdaNfa {
             transitions.insert((NodeIndex::new(f as usize), final_node), "λ".to_string());
         }
 
-        // 2. Eliminate intermediate states
         for &k in &states {
             let r_kk = transitions.get(&(k, k)).cloned();
             let mut new_transitions = Vec::new();
 
-            // Find all p -> k and k -> r
+            // find all p -> k and k -> r
             let predecessors: Vec<NodeIndex> = transitions
                 .keys()
                 .filter(|&&(p, to)| to == k && p != k)
