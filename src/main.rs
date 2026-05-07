@@ -37,15 +37,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut graph = DiGraph::new();
     let q0 = graph.add_node(0);
     let q1 = graph.add_node(1);
-    let q2 = graph.add_node(2);
 
     graph.add_edge(
         q0,
         q0,
         PdaTransition {
             input_symbol: Some('a'),
-            pop_symbol: 'Z',
-            push_symbols: vec!['A', 'Z'],
+            pop_symbol: None,
+            push_symbols: vec!['A'],
         },
     );
 
@@ -54,48 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         q0,
         PdaTransition {
             input_symbol: Some('b'),
-            pop_symbol: 'Z',
-            push_symbols: vec!['B', 'Z'],
-        },
-    );
-
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: 'A',
-            push_symbols: vec!['A', 'A'],
-        },
-    );
-
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: 'B',
-            push_symbols: vec!['B', 'B'],
-        },
-    );
-
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: 'B',
-            push_symbols: vec!['A', 'B'],
-        },
-    );
-
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: 'A',
-            push_symbols: vec!['B', 'A'],
+            pop_symbol: None,
+            push_symbols: vec!['B'],
         },
     );
 
@@ -103,18 +62,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         q0,
         q1,
         PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: 'A',
-            push_symbols: vec![],
-        },
-    );
-
-    graph.add_edge(
-        q0,
-        q1,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: 'B',
+            input_symbol: None,
+            pop_symbol: None,
             push_symbols: vec![],
         },
     );
@@ -124,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         q1,
         PdaTransition {
             input_symbol: Some('a'),
-            pop_symbol: 'A',
+            pop_symbol: Some('A'),
             push_symbols: vec![],
         },
     );
@@ -134,30 +83,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         q1,
         PdaTransition {
             input_symbol: Some('b'),
-            pop_symbol: 'B',
+            pop_symbol: Some('B'),
             push_symbols: vec![],
         },
     );
 
-    graph.add_edge(
-        q1,
-        q2,
-        PdaTransition {
-            input_symbol: Some('λ'),
-            pop_symbol: 'Z',
-            push_symbols: vec![],
-        },
-    );
     let pda = Pda {
         initial_state: 0,
-        initial_stack_symbol: 'λ',
-        final_states: vec![2],
+        initial_stack_symbol: None,
+        final_states: vec![1],
         graph,
         acceptance_condition: AcceptanceCondition::Both,
     };
 
     // it should check if it is a palindrome and it has an even length
-    let test_strings = vec!["ab", "ba", "aabaa"];
+    let test_strings = vec!["ab", "ba", "aabaa", "aa", "abba", ""];
     for s in test_strings {
         println!("\"{}\": {}", s, pda.run(s));
     }

@@ -134,6 +134,7 @@ pub mod prelude {
         lambda_dfa::LambdaDfa,
         lambda_nfa::LambdaNfa,
         nfa::Nfa,
+        pda::{AcceptanceCondition, Pda, PdaTransition},
         raw_automaton::{Loadable, ReadGraphError},
     };
 }

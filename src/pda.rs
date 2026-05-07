@@ -21,8 +21,8 @@ pub enum AcceptanceCondition {
 pub struct PdaTransition {
     /// The input symbol to consume. `None` represents a lambda transition.
     pub input_symbol: Option<char>,
-    /// The symbol to pop from the stack.
-    pub pop_symbol: char,
+    /// The symbol to pop from the stack. `None` represents a lambda transition (no pop).
+    pub pop_symbol: Option<char>,
     /// The symbols to push onto the stack (in order, first symbol becomes new top).
     pub push_symbols: Vec<char>,
 }
@@ -32,8 +32,8 @@ pub struct PdaTransition {
 pub struct Pda {
     /// The initial state of the PDA.
     pub initial_state: u32,
-    /// The initial symbol on the stack.
-    pub initial_stack_symbol: char,
+    /// The initial symbol on the stack. `None` means the stack is initially empty.
+    pub initial_stack_symbol: Option<char>,
     /// The set of final (accepting) states.
     pub final_states: Vec<u32>,
     /// The transition graph.
@@ -42,11 +42,20 @@ pub struct Pda {
     pub acceptance_condition: AcceptanceCondition,
 }
 
+fn is_lambda(symbol: Option<char>) -> bool {
+    matches!(symbol, None | Some('λ') | Some('ε'))
+}
+
 impl Pda {
     /// Runs the PDA on the given input string.
     #[must_use]
     pub fn run(&self, input: &str) -> bool {
-        let initial_stack = vec![self.initial_stack_symbol];
+        let mut initial_stack = Vec::new();
+        if !is_lambda(self.initial_stack_symbol) {
+            if let Some(s) = self.initial_stack_symbol {
+                initial_stack.push(s);
+            }
+        }
 
         let mut current_configs = HashSet::new();
         current_configs.insert((NodeIndex::new(self.initial_state as usize), initial_stack));
@@ -57,16 +66,24 @@ impl Pda {
         for c in input.chars() {
             let mut next_configs = HashSet::new();
             for (state, stack) in current_configs {
-                if let Some(top) = stack.last() {
-                    for edge in self.graph.edges_directed(state, Direction::Outgoing) {
-                        let trans = edge.weight();
-                        if trans.input_symbol == Some(c) && trans.pop_symbol == *top {
+                for edge in self.graph.edges_directed(state, Direction::Outgoing) {
+                    let trans = edge.weight();
+                    if trans.input_symbol == Some(c) {
+                        if is_lambda(trans.pop_symbol) {
                             let mut next_stack = stack.clone();
-                            next_stack.pop();
                             for &s in trans.push_symbols.iter().rev() {
                                 next_stack.push(s);
                             }
                             next_configs.insert((edge.target(), next_stack));
+                        } else if let Some(top) = stack.last() {
+                            if Some(*top) == trans.pop_symbol {
+                                let mut next_stack = stack.clone();
+                                next_stack.pop();
+                                for &s in trans.push_symbols.iter().rev() {
+                                    next_stack.push(s);
+                                }
+                                next_configs.insert((edge.target(), next_stack));
+                            }
                         }
                     }
                 }
@@ -94,18 +111,29 @@ impl Pda {
     ) -> HashSet<(NodeIndex, Vec<char>)> {
         let mut stack: Vec<(NodeIndex, Vec<char>)> = configs.iter().cloned().collect();
         while let Some((state, current_stack)) = stack.pop() {
-            if let Some(top) = current_stack.last() {
-                for edge in self.graph.edges_directed(state, Direction::Outgoing) {
-                    let trans = edge.weight();
-                    if trans.input_symbol.is_none() && trans.pop_symbol == *top {
+            for edge in self.graph.edges_directed(state, Direction::Outgoing) {
+                let trans = edge.weight();
+                if is_lambda(trans.input_symbol) {
+                    if is_lambda(trans.pop_symbol) {
                         let mut next_stack = current_stack.clone();
-                        next_stack.pop();
                         for &s in trans.push_symbols.iter().rev() {
                             next_stack.push(s);
                         }
                         let next_config = (edge.target(), next_stack);
                         if configs.insert(next_config.clone()) {
                             stack.push(next_config);
+                        }
+                    } else if let Some(top) = current_stack.last() {
+                        if Some(*top) == trans.pop_symbol {
+                            let mut next_stack = current_stack.clone();
+                            next_stack.pop();
+                            for &s in trans.push_symbols.iter().rev() {
+                                next_stack.push(s);
+                            }
+                            let next_config = (edge.target(), next_stack);
+                            if configs.insert(next_config.clone()) {
+                                stack.push(next_config);
+                            }
                         }
                     }
                 }
@@ -132,7 +160,7 @@ mod tests {
             q1,
             PdaTransition {
                 input_symbol: Some('a'),
-                pop_symbol: 'Z',
+                pop_symbol: Some('Z'),
                 push_symbols: vec!['A', 'Z'],
             },
         );
@@ -141,7 +169,7 @@ mod tests {
             q1,
             PdaTransition {
                 input_symbol: Some('a'),
-                pop_symbol: 'A',
+                pop_symbol: Some('A'),
                 push_symbols: vec!['A', 'A'],
             },
         );
@@ -150,7 +178,7 @@ mod tests {
             q2,
             PdaTransition {
                 input_symbol: Some('b'),
-                pop_symbol: 'A',
+                pop_symbol: Some('A'),
                 push_symbols: vec![],
             },
         );
@@ -159,7 +187,7 @@ mod tests {
             q2,
             PdaTransition {
                 input_symbol: Some('b'),
-                pop_symbol: 'A',
+                pop_symbol: Some('A'),
                 push_symbols: vec![],
             },
         );
@@ -168,7 +196,7 @@ mod tests {
             q3,
             PdaTransition {
                 input_symbol: None,
-                pop_symbol: 'Z',
+                pop_symbol: Some('Z'),
                 push_symbols: vec!['Z'],
             },
         );
@@ -177,14 +205,14 @@ mod tests {
             q3,
             PdaTransition {
                 input_symbol: None,
-                pop_symbol: 'Z',
+                pop_symbol: Some('Z'),
                 push_symbols: vec!['Z'],
             },
         );
 
         let pda = Pda {
             initial_state: 0,
-            initial_stack_symbol: 'Z',
+            initial_stack_symbol: Some('Z'),
             final_states: vec![3],
             graph,
             acceptance_condition: AcceptanceCondition::FinalState,
@@ -199,5 +227,133 @@ mod tests {
         assert!(!pda.run("ba"));
         assert!(!pda.run("abb"));
         assert!(!pda.run("aab"));
+    }
+
+    #[test]
+    fn test_lambda_pop() {
+        let mut graph = DiGraph::new();
+        let q0 = graph.add_node(0);
+        let q1 = graph.add_node(1);
+
+        graph.add_edge(
+            q0,
+            q1,
+            PdaTransition {
+                input_symbol: Some('a'),
+                pop_symbol: None, // Lambda pop
+                push_symbols: vec!['A'],
+            },
+        );
+
+        let pda = Pda {
+            initial_state: 0,
+            initial_stack_symbol: None, // Start empty
+            final_states: vec![1],
+            graph,
+            acceptance_condition: AcceptanceCondition::FinalState,
+        };
+
+        assert!(pda.run("a"));
+        assert!(!pda.run(""));
+    }
+
+    #[test]
+    fn test_lambda_literals() {
+        let mut graph = DiGraph::new();
+        let q0 = graph.add_node(0);
+        let q1 = graph.add_node(1);
+
+        graph.add_edge(
+            q0,
+            q1,
+            PdaTransition {
+                input_symbol: Some('λ'),
+                pop_symbol: Some('ε'),
+                push_symbols: vec![],
+            },
+        );
+
+        let pda = Pda {
+            initial_state: 0,
+            initial_stack_symbol: Some('Z'),
+            final_states: vec![1],
+            graph,
+            acceptance_condition: AcceptanceCondition::FinalState,
+        };
+
+        assert!(pda.run(""));
+    }
+
+    #[test]
+    fn test_palindrome_even() {
+        let mut graph = DiGraph::new();
+        let q0 = graph.add_node(0);
+        let q1 = graph.add_node(1);
+        let q2 = graph.add_node(2);
+
+        // Push 'A' for 'a', 'B' for 'b'
+        for (c, s) in [('a', 'A'), ('b', 'B')] {
+            graph.add_edge(
+                q0,
+                q0,
+                PdaTransition {
+                    input_symbol: Some(c),
+                    pop_symbol: None,
+                    push_symbols: vec![s],
+                },
+            );
+        }
+
+        // Guess the middle (non-determinism)
+        graph.add_edge(
+            q0,
+            q1,
+            PdaTransition {
+                input_symbol: None,
+                pop_symbol: None,
+                push_symbols: vec![],
+            },
+        );
+
+        // Pop 'A' for 'a', 'B' for 'b'
+        for (c, s) in [('a', 'A'), ('b', 'B')] {
+            graph.add_edge(
+                q1,
+                q1,
+                PdaTransition {
+                    input_symbol: Some(c),
+                    pop_symbol: Some(s),
+                    push_symbols: vec![],
+                },
+            );
+        }
+
+        // Accept if stack is empty
+        graph.add_edge(
+            q1,
+            q2,
+            PdaTransition {
+                input_symbol: None,
+                pop_symbol: None,
+                push_symbols: vec![],
+            },
+        );
+
+        let pda = Pda {
+            initial_state: 0,
+            initial_stack_symbol: None,
+            final_states: vec![2],
+            graph,
+            acceptance_condition: AcceptanceCondition::Both,
+        };
+
+        assert!(pda.run(""));
+        assert!(pda.run("aa"));
+        assert!(pda.run("abba"));
+        assert!(pda.run("baab"));
+        assert!(pda.run("aaaa"));
+        assert!(!pda.run("a"));
+        assert!(!pda.run("ab"));
+        assert!(!pda.run("aba"));
     }
 }
