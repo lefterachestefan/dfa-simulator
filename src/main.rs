@@ -1,4 +1,9 @@
-use automaton_simulator::pda::{AcceptanceCondition, Pda, PdaTransition};
+use automaton_simulator::prelude::*;
+use automaton_simulator::{
+    Automaton,
+    pda::{AcceptanceCondition, Pda, PdaTransition},
+    regex::RegexConverter,
+};
 use petgraph::graph::DiGraph;
 
 // fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,6 +39,18 @@ use petgraph::graph::DiGraph;
 // }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let lnfa = LambdaNfa::try_read_from_file("lnfa_to_regex.txt")?;
+    let lnfa = lnfa.minimize();
+    let reg = lnfa.to_regex();
+    println!("{}", reg);
+
+    let lnfa = RegexConverter::to_lambda_nfa("(a*b*)aa|aa(b*aa)*(ba|ab)");
+    let lnfa: Dfa = lnfa.minimize().into();
+    let lnfa: LambdaNfa = lnfa.into();
+    lnfa.save_png("magic.png")?;
+    let back = lnfa.to_regex();
+    println!("back: {back}");
+
     let mut graph = DiGraph::new();
     let q0 = graph.add_node(0);
     let q1 = graph.add_node(1);
