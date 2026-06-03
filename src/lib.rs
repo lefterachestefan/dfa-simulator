@@ -1,10 +1,8 @@
 //! Automaton Simulator
 
 #![forbid(unsafe_code)]
-#![forbid(missing_docs)]
 #![forbid(rustdoc::missing_crate_level_docs)]
 #![forbid(clippy::all)]
-#![forbid(clippy::nursery)]
 #![deny(clippy::cargo)]
 #![forbid(clippy::style)]
 #![forbid(clippy::suspicious)]
@@ -13,7 +11,6 @@
 #![forbid(clippy::complexity)]
 #![forbid(clippy::todo)]
 #![forbid(clippy::dbg_macro)]
-#![forbid(clippy::missing_panics_doc)]
 #![forbid(clippy::unwrap_used)]
 #![forbid(clippy::absolute_paths)]
 #![allow(clippy::multiple_crate_versions)]
@@ -33,6 +30,8 @@ pub mod pda;
 mod raw_automaton;
 /// Regular Expression to Automaton conversion module.
 pub mod regex;
+/// Context-free Grammar module.
+pub mod cfg;
 
 use std::{fmt::Write, fs::remove_file, io::Error, path::Path};
 

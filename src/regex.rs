@@ -94,11 +94,6 @@ impl RegexConverter {
         output
     }
 
-    /// Transforms a regex string into a `LambdaNfa`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the regular expression is invalid.
     #[must_use]
     pub fn to_lambda_nfa(regex: &str) -> LambdaNfa {
         let preprocessed = Self::preprocess(regex);
@@ -165,7 +160,6 @@ impl RegexConverter {
 
         let (start, end) = stack.pop().expect("Invalid regex");
 
-        // Re-index nodes to be 0..N
         let mut new_graph = DiGraph::new();
         let mut node_map = HashMap::new();
         for node in graph.node_indices() {

@@ -30,19 +30,14 @@ pub struct PdaTransition {
 /// Push-down Automaton
 #[derive(Debug, Clone)]
 pub struct Pda {
-    /// The initial state of the PDA.
     pub initial_state: u32,
-    /// The initial symbol on the stack. `None` means the stack is initially empty.
     pub initial_stack_symbol: Option<char>,
-    /// The set of final (accepting) states.
     pub final_states: Vec<u32>,
-    /// The transition graph.
     pub graph: DiGraph<u32, PdaTransition>,
-    /// The condition under which a string is accepted.
     pub acceptance_condition: AcceptanceCondition,
 }
 
-fn is_lambda(symbol: Option<char>) -> bool {
+const fn is_lambda(symbol: Option<char>) -> bool {
     matches!(symbol, None | Some('λ') | Some('ε'))
 }
 
@@ -60,7 +55,6 @@ impl Pda {
         let mut current_configs = HashSet::new();
         current_configs.insert((NodeIndex::new(self.initial_state as usize), initial_stack));
 
-        // Initial epsilon closure
         current_configs = self.epsilon_closure(current_configs);
 
         for c in input.chars() {

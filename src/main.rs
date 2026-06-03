@@ -1,179 +1,25 @@
-use automaton_simulator::prelude::*;
-use automaton_simulator::{
-    Automaton,
-    pda::{AcceptanceCondition, Pda, PdaTransition},
-    regex::RegexConverter,
-};
-use petgraph::graph::DiGraph;
-
-// fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let dfa = Dfa::try_read_from_file("dfa2.txt")?;
-//     dfa.save_png("dfa.png")?;
-//     let dfa_minim = dfa.minimize();
-//     dfa_minim.save_png("dfa_minim.png")?;
-//     println!("{}", dfa.run("abaa"));
-//     println!("{}", dfa.run("abbb"));
-//     println!("{}", dfa.run("aaaa"));
-//     println!("----------");
-//
-//     let nfa = Nfa::try_read_from_file("nfa2.txt")?;
-//     nfa.save_png("nfa.png")?;
-//     println!("{}", nfa.run("abc"));
-//     println!("{}", nfa.run("aaabbb"));
-//     println!("{}", nfa.run("aaaccc"));
-//     println!("{}", nfa.run("aaa"));
-//     println!("----------");
-//
-//     let lnfa = LambdaNfa::try_read_from_file("lambda2.txt")?;
-//     lnfa.save_png("lambda_nfa.png")?;
-//     println!("{}", lnfa.run("abc"));
-//     println!("{}", lnfa.run("cb"));
-//     println!("{}", lnfa.run("aaa"));
-//     println!("{}", lnfa.run("abb"));
-//     println!("----------");
-//
-//     let transformed = Dfa::from(lnfa);
-//     transformed.save_png("transformed.png")?;
-//
-//     Ok(())
-// }
+use automaton_simulator::cfg::Cfg;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let lnfa = LambdaNfa::try_read_from_file("lnfa_to_regex.txt")?;
-    let lnfa = lnfa.minimize();
-    let reg = lnfa.to_regex();
-    println!("{}", reg);
+    let cfg = Cfg::try_read_from_file("cfg_input_2.txt")?;
+    println!("CFG: {:?}", cfg);
 
-    let lnfa = RegexConverter::to_lambda_nfa("(a*b*)aa|aa(b*aa)*(ba|ab)");
-    let lnfa: Dfa = lnfa.minimize().into();
-    let lnfa: LambdaNfa = lnfa.into();
-    lnfa.save_png("magic.png")?;
-    let back = lnfa.to_regex();
-    println!("back: {back}");
+    println!("\nEx 1: Generate words of length 4");
+    let mut words: Vec<_> = cfg.generate_words(4).into_iter().collect();
+    words.sort();
+    println!("Words of length 4: {:?}", words);
 
-    let mut graph = DiGraph::new();
-    let q0 = graph.add_node(0);
-    let q1 = graph.add_node(1);
-    let q2 = graph.add_node(2);
+    println!("\nEx 2: Transform to CNF");
+    let cnf = cfg.to_cnf();
+    // println!("CNF Productions:");
+    // for (head, prods) in &cnf.productions {
+    //     println!("  {} -> {:?}", head, prods);
+    // }
 
-    // q0 -> q0
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: Some('Z'),
-            push_symbols: vec!['A', 'Z'],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: Some('Z'),
-            push_symbols: vec!['B', 'Z'],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: Some('A'),
-            push_symbols: vec!['A', 'A'],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: Some('B'),
-            push_symbols: vec!['B', 'B'],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: Some('B'),
-            push_symbols: vec!['A', 'B'],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q0,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: Some('A'),
-            push_symbols: vec!['B', 'A'],
-        },
-    );
-
-    // q0 -> q1
-    graph.add_edge(
-        q0,
-        q1,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: Some('A'),
-            push_symbols: vec![],
-        },
-    );
-    graph.add_edge(
-        q0,
-        q1,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: Some('B'),
-            push_symbols: vec![],
-        },
-    );
-
-    // q1 -> q1
-    graph.add_edge(
-        q1,
-        q1,
-        PdaTransition {
-            input_symbol: Some('a'),
-            pop_symbol: Some('A'),
-            push_symbols: vec![],
-        },
-    );
-    graph.add_edge(
-        q1,
-        q1,
-        PdaTransition {
-            input_symbol: Some('b'),
-            pop_symbol: Some('B'),
-            push_symbols: vec![],
-        },
-    );
-
-    // q1 -> q2
-    graph.add_edge(
-        q1,
-        q2,
-        PdaTransition {
-            input_symbol: None,
-            pop_symbol: Some('Z'),
-            push_symbols: vec![],
-        },
-    );
-
-    let pda = Pda {
-        initial_state: 0,
-        initial_stack_symbol: Some('Z'),
-        final_states: vec![2],
-        graph,
-        acceptance_condition: AcceptanceCondition::Both,
-    };
-
-    let test_strings = vec!["ab", "ba", "aabaa", "aa", "abba", ""];
-    for s in test_strings {
-        println!("\"{}\": {}", s, pda.run(s));
+    println!("\nEx 3: CYK Algorithm");
+    let test_words = vec!["aabb", "abab", "ab", "ba", "baba", "aaabbb", "aab"];
+    for word in test_words {
+        println!("  \"{}\": {}", word, cnf.cyk(word));
     }
 
     Ok(())

@@ -10,7 +10,6 @@ use petgraph::{
 };
 use std::collections::{HashMap, HashSet};
 
-/// Nondeterministic Finite Automaton with Lambda transitions
 #[derive(Debug, Clone)]
 pub struct LambdaNfa {
     pub(crate) initial_state: u32,
@@ -20,7 +19,6 @@ pub struct LambdaNfa {
 }
 
 impl Automaton for LambdaNfa {
-    /// Runs the Lambda-NFA on the given input string.
     fn run(&self, input: impl AsRef<str>) -> bool {
         let mut current_states = HashSet::new();
         current_states.insert(NodeIndex::new(self.initial_state as usize));
@@ -60,7 +58,6 @@ impl Automaton for LambdaNfa {
                 .contains(&u32::try_from(s.index()).unwrap_or(0))
         })
     }
-    /// Minimizes the `LambdaNfa` by converting to DFA, minimizing the DFA, and converting back.
     fn minimize(&self) -> Self {
         Self::from(Dfa::from(self.clone()).minimize())
     }
@@ -71,7 +68,6 @@ impl Automaton for LambdaNfa {
 }
 
 impl LambdaNfa {
-    /// Transforms the `LambdaNfa` into an equivalent Regular Expression string.
     #[must_use]
     pub fn to_regex(&self) -> String {
         let states: Vec<NodeIndex> = self.graph.node_indices().collect();
@@ -108,7 +104,6 @@ impl LambdaNfa {
             let r_kk = transitions.get(&(k, k)).cloned();
             let mut new_transitions = Vec::new();
 
-            // find all p -> k and k -> r
             let predecessors: Vec<NodeIndex> = transitions
                 .keys()
                 .filter(|&&(p, to)| to == k && p != k)
@@ -156,7 +151,6 @@ impl LambdaNfa {
                 }
             }
 
-            // Remove state k and its transitions
             transitions.retain(|&(from, to), _| from != k && to != k);
             for (edge, label) in new_transitions {
                 transitions.insert(edge, label);
