@@ -380,10 +380,10 @@ mod tests {
         };
 
         let words = cfg.generate_words(2);
-        assert_eq!(words, ["ab".to_string()].into_iter().collect());
+        assert_eq!(words, ["ab".to_string()].into_iter().collect::<HashSet<_>>());
         
         let words4 = cfg.generate_words(4);
-        assert_eq!(words4, ["aabb".to_string()].into_iter().collect());
+        assert_eq!(words4, ["aabb".to_string()].into_iter().collect::<HashSet<_>>());
     }
 
     #[test]

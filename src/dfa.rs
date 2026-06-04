@@ -13,10 +13,10 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque, hash_map:
 /// Deterministic Finite Automaton
 #[derive(Debug, Clone)]
 pub struct Dfa {
-    pub(crate) initial_state: u32,
-    pub(crate) final_states: Vec<u32>,
-    pub(crate) graph: DiGraph<u32, String>,
-    pub(crate) alphabet: Vec<String>,
+    pub initial_state: u32,
+    pub final_states: Vec<u32>,
+    pub graph: DiGraph<u32, String>,
+    pub alphabet: Vec<String>,
 }
 
 impl Automaton for Dfa {

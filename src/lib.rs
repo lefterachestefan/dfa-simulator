@@ -32,6 +32,8 @@ mod raw_automaton;
 pub mod regex;
 /// Context-free Grammar module.
 pub mod cfg;
+/// Genetic Algorithm Agent to DFA conversion module.
+pub mod genetic;
 
 use std::{fmt::Write, fs::remove_file, io::Error, path::Path};
 
@@ -130,6 +132,7 @@ pub mod prelude {
     pub use crate::Automaton;
     pub use crate::{
         dfa::Dfa,
+        genetic::Agent,
         lambda_dfa::LambdaDfa,
         lambda_nfa::LambdaNfa,
         nfa::Nfa,

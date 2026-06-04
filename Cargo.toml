@@ -14,6 +14,7 @@ repository = "https://github.com/lefterachestefan/dfa-simulator"
 [dependencies]
 petgraph = "0.8.3"
 thiserror = "2.0.18"
+rkyv = { version = "0.8.12", features = ["bytecheck"] }
 
 [profile.dev]
 opt-level = 2
